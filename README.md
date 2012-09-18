@@ -10,7 +10,9 @@
 
 ## Use
 
-1. Sign up for a Searchify account if you don't have one - <http://www.searchify.com>
+First, sign up for a Searchify account if you don't have one - <http://www.searchify.com>, or use the
+[Heroku Searchify add-on](https://addons.heroku.com/searchify)
+
 
 
     package main
