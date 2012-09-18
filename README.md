@@ -14,7 +14,7 @@ First, sign up for a Searchify account if you don't have one - <http://www.searc
 [Heroku Searchify add-on](https://addons.heroku.com/searchify)
 
 
-
+```go
     package main
 
     import (
@@ -47,7 +47,7 @@ First, sign up for a Searchify account if you don't have one - <http://www.searc
 
         // this example is not completed yet
     }
-
+```
 
 ## Notes
 
