@@ -2,7 +2,7 @@
 
 ## Install
 
-    go get github.com/searchify/gotank
+    go get github.com/searchify/gotank/indextank
 
 ## Docs
 
@@ -18,7 +18,7 @@ First, sign up for a Searchify account if you don't have one - <http://www.searc
     package main
 
     import (
-        "searchify/gotank/indextank"
+        "github.com/searchify/gotank/indextank"
         "log"
     )
 
