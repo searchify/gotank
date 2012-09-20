@@ -1,4 +1,3 @@
-
 // Provides API access to a Searchify hosted IndexTank account & indexes.
 // Example usage:
 //   API_URL := "http://...api.searchify.com"	 		// your private API URL
@@ -20,9 +19,9 @@
 package indextank
 
 import (
-	"strings"
-	"net/url"
 	"errors"
+	"net/url"
+	"strings"
 )
 
 // Provides an interface manage indexes.
@@ -58,7 +57,7 @@ func NewApiClient(apiUrl string) (ApiClient, error) {
 		return nil, errors.New("URL scheme must be http or https")
 	}
 	if strings.HasSuffix(apiUrl, "/") {
-		apiUrl = apiUrl[0:len(apiUrl)-1]
+		apiUrl = apiUrl[0 : len(apiUrl)-1]
 	}
 	client := indexTankClient{apiUrl}
 	return &client, nil
@@ -67,14 +66,14 @@ func NewApiClient(apiUrl string) (ApiClient, error) {
 // Returns a search Index for this account.
 func (client *indexTankClient) GetIndex(name string) Index {
 	indexUrl := makeIndexUrl(client.apiUrl, name)
-	ic := IndexClient{url:indexUrl}
+	ic := IndexClient{url: indexUrl}
 	return &ic
 }
 
 // Creates a new search index.
-func (client *indexTankClient) CreateIndex(name string) (Index, error) {   // todo: add options param
+func (client *indexTankClient) CreateIndex(name string) (Index, error) { // todo: add options param
 	indexUrl := makeIndexUrl(client.apiUrl, name)
-	index := IndexClient{url:indexUrl}
+	index := IndexClient{url: indexUrl}
 	return &index, index.CreateIndex()
 }
 
@@ -83,7 +82,7 @@ func (client *indexTankClient) CreateIndex(name string) (Index, error) {   // to
 // "public_search", a boolean - whether to enable searches to this index using the public API URL
 func (client *indexTankClient) CreateIndexWithOptions(name string, options map[string]interface{}) (Index, error) {
 	indexUrl := makeIndexUrl(client.apiUrl, name)
-	index := IndexClient{url:indexUrl}
+	index := IndexClient{url: indexUrl}
 	return &index, index.CreateIndexWithOptions(options)
 }
 
@@ -91,14 +90,14 @@ func (client *indexTankClient) CreateIndexWithOptions(name string, options map[s
 // "public_search" - see the CreateIndexWithOptions doc above.
 func (client *indexTankClient) UpdateIndex(name string, options map[string]interface{}) error {
 	indexUrl := makeIndexUrl(client.apiUrl, name)
-	index := IndexClient{url:indexUrl}
+	index := IndexClient{url: indexUrl}
 	return index.UpdateIndex(options)
 }
 
 // Permanently deletes the specified index and all its documents from the server.
 func (client *indexTankClient) DeleteIndex(name string) error {
 	indexUrl := makeIndexUrl(client.apiUrl, name)
-	index := IndexClient{url:indexUrl}
+	index := IndexClient{url: indexUrl}
 	return index.DeleteIndex()
 }
 
@@ -115,7 +114,7 @@ func (client *indexTankClient) ListIndexes() (map[string]Index, error) {
 	//m := i.(map[string]interface{})
 	for k, v := range m {
 		indexUrl := uri + k //"/" + k
-		indexClient := IndexClient{url:indexUrl, metadata:v.(map[string]interface{})}
+		indexClient := IndexClient{url: indexUrl, metadata: v.(map[string]interface{})}
 		//indexes = append(indexes, indexClient)
 		indexMap[k] = &indexClient
 	}

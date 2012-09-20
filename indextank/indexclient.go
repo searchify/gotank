@@ -1,11 +1,11 @@
 package indextank
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/url"
-	"encoding/json"
-	"errors"
 	"strconv"
 	"time"
 )
@@ -63,10 +63,9 @@ type Index interface {
 }
 
 type IndexClient struct {
-	url string
+	url      string
 	metadata map[string]interface{}
 }
-
 
 func (client *IndexClient) CreateIndex() error {
 	return client.CreateIndexWithOptions(nil)
@@ -90,10 +89,13 @@ func (client *IndexClient) CreateIndexWithOptions(options map[string]interface{}
 		defer resp.Body.Close()
 	}
 	switch resp.StatusCode {
-	case 201: client.GetMetadata()
+	case 201:
+		client.GetMetadata()
 		return nil
-	case 204: return errors.New("Index already exists")
-	case 409: return errors.New("Maximum indexes limit reached for this account")
+	case 204:
+		return errors.New("Index already exists")
+	case 409:
+		return errors.New("Maximum indexes limit reached for this account")
 	}
 	return fmt.Errorf("Unexpected error, HTTP status %d: %s", resp.StatusCode, resp.Status)
 }
@@ -105,7 +107,7 @@ func (client *IndexClient) UpdateIndex(options map[string]interface{}) error {
 	}
 	if isOk(resp.StatusCode) {
 		client.metadata, err = client.refreshMetadata()
-		return nil;
+		return nil
 	}
 	if resp.StatusCode == 404 {
 		return errors.New("Index does not exist")
@@ -125,7 +127,7 @@ func (client *IndexClient) Exists() bool {
 	return err == nil
 }
 
-func (client *IndexClient) HasStarted() (bool) {
+func (client *IndexClient) HasStarted() bool {
 	client.metadata, _ = client.refreshMetadata()
 	return client.metadata["started"] == true
 }
@@ -183,7 +185,7 @@ func (client *IndexClient) getMetadata(s string) (interface{}, error) {
 
 func (client *IndexClient) GetMetadata() (map[string]interface{}, error) {
 	var err error
-	if (client.metadata == nil) {
+	if client.metadata == nil {
 		client.metadata, err = client.refreshMetadata()
 	}
 	return client.metadata, err
@@ -207,15 +209,15 @@ func (client *IndexClient) ListFunctions() (map[string]string, error) {
 		return nil, err
 	}
 
-	m := map[string]string {}
+	m := map[string]string{}
 	err = json.Unmarshal(body, &m)
 	return m, err
 }
 
-func (client *IndexClient) AddFunction(functionIndex int, definition string) (error) {
+func (client *IndexClient) AddFunction(functionIndex int, definition string) error {
 	functions_url := client.url + "/functions/" + strconv.Itoa(functionIndex)
 
-	data := map[string]string { "definition": definition }
+	data := map[string]string{"definition": definition}
 	resp, err := request("PUT", functions_url, data)
 	if err != nil {
 		return err
@@ -258,15 +260,14 @@ func (client *IndexClient) DeleteFunction(functionIndex int) error {
 	return fmt.Errorf("Unexpected %d error: %s", resp.StatusCode, resp.Status)
 }
 
-
 func (client *IndexClient) AddDocument(documentId string, fields map[string]string, variables map[int]float32,
-	categories map[string]string) (error) {
+	categories map[string]string) error {
 	addUrl := client.url + "/docs"
 	// todo - validate len(utf8(docId)) <= 1024
-	data := map[string]interface{} { "docid": documentId, "fields": fields }
+	data := map[string]interface{}{"docid": documentId, "fields": fields}
 	if variables != nil {
 		// convert int keys to strings because the json encoder only supports string keys
-		vars := map[string]float32 {}
+		vars := map[string]float32{}
 		for k, v := range variables {
 			vars[strconv.Itoa(k)] = v
 		}
@@ -295,33 +296,33 @@ func (client *IndexClient) AddDocument(documentId string, fields map[string]stri
 }
 
 type Document struct {
-	Id string					`json:"docid"`
-	Fields map[string]string	`json:"fields"`
-	Variables map[string]float32	`json:"variables,omitempty"`
-	Categories map[string]string `json:"categories,omitempty"`
+	Id         string             `json:"docid"`
+	Fields     map[string]string  `json:"fields"`
+	Variables  map[string]float32 `json:"variables,omitempty"`
+	Categories map[string]string  `json:"categories,omitempty"`
 }
 
-type Doc interface {}
+//type Doc interface{}
 
 func NewDocument(docid string, fields map[string]string, variables map[int]float32, categories map[string]string) (Document, error) {
 	// convert int keys to strings because the json encoder only supports string keys
-	vars := map[string]float32 {}
+	vars := map[string]float32{}
 	for k, v := range variables {
 		vars[strconv.Itoa(k)] = v
 	}
 	// todo - validate len(utf8(docId)) <= 1024
-	doc := Document {
-		Id: docid,
-		Fields: fields,
-		Variables: vars,
+	doc := Document{
+		Id:         docid,
+		Fields:     fields,
+		Variables:  vars,
 		Categories: categories,
 	}
 	return doc, nil
 }
 
 type addResult struct {
-	Added bool		`json:"added"`
-	Error string	`json:"error"`
+	Added bool   `json:"added"`
+	Error string `json:"error"`
 }
 
 func (client *IndexClient) AddDocuments(documents []Document) (BatchResults, error) {
@@ -376,11 +377,11 @@ func (c *IndexClient) UpdateVariables(documentId string, variables map[int]float
 	updateUrl := c.url + "/docs/variables"
 
 	// convert int keys to strings because the json encoder only supports string keys
-	vars := map[string]float32 {}
+	vars := map[string]float32{}
 	for k, v := range variables {
 		vars[strconv.Itoa(k)] = v
 	}
-	data := map[string]interface{} { "docid": documentId, "variables": vars }
+	data := map[string]interface{}{"docid": documentId, "variables": vars}
 	//fmt.Printf("UpdateVariables data: %v\n", data)
 	resp, err := request("PUT", updateUrl, data)
 	if err != nil {
@@ -406,7 +407,7 @@ func (c *IndexClient) UpdateCategories(documentId string, categories map[string]
 	return errors.New("UpdateCategories not yet implemented")
 }
 
-func (client *IndexClient) DeleteDocument(documentId string) (error) {
+func (client *IndexClient) DeleteDocument(documentId string) error {
 	docs_url := client.url + "/docs?docid=" + url.QueryEscape(documentId)
 	resp, err := request("DELETE", docs_url, nil)
 	if err != nil {
@@ -424,12 +425,12 @@ func (client *IndexClient) DeleteDocument(documentId string) (error) {
 
 // used in DeleteDocuments
 type docPair struct {
-	DocId string	`json:"docid"`
+	DocId string `json:"docid"`
 }
 
 type deleteResult struct {
-	Deleted bool	`json:"deleted"`
-	Error string	`json:"error"`
+	Deleted bool   `json:"deleted"`
+	Error   string `json:"error"`
 }
 
 func (client *IndexClient) DeleteDocuments(documentIds []string) (BulkDeleteResults, error) {
@@ -438,7 +439,7 @@ func (client *IndexClient) DeleteDocuments(documentIds []string) (BulkDeleteResu
 
 	docs := make([]docPair, 0, len(documentIds))
 	for _, v := range documentIds {
-		dp := docPair{DocId:v}
+		dp := docPair{DocId: v}
 		docs = append(docs, dp)
 	}
 
@@ -472,12 +473,12 @@ func (client *IndexClient) DeleteDocuments(documentIds []string) (BulkDeleteResu
 
 type searchResults struct {
 	// e.g. {"matches": 0, "facets": {}, "results": [], "didyoumean": null, "query": "cats OR dogs", "search_time": "0.004"}
-	Matches int64 		`json:"matches,omitempty"`
-	Query string 		`json:"query,omitempty"`
-	SearchTime string 	`json:"search_time"`
-	DidYouMean *string 	`json:"didyoumean,omitempty"`
-	Results []map[string]interface{} `json:"results,omitempty"`
-	Facets map[string]map[string]int  `json:"facets,omitempty"`
+	Matches    int64                     `json:"matches,omitempty"`
+	Query      string                    `json:"query,omitempty"`
+	SearchTime string                    `json:"search_time"`
+	DidYouMean *string                   `json:"didyoumean,omitempty"`
+	Results    []map[string]interface{}  `json:"results,omitempty"`
+	Facets     map[string]map[string]int `json:"facets,omitempty"`
 }
 
 type SearchResults interface {
@@ -525,12 +526,12 @@ func (client *IndexClient) SearchWithQuery(query Query) (SearchResults, error) {
 		body, _ := ioutil.ReadAll(resp.Body)
 		//fmt.Printf("**BODY: %v\n", string(body))
 		/*
-		var r map[string]interface{}
-		err := json.Unmarshal(body, &r)
-		if err != nil {
-			//fmt.Printf("Error unmarshalling searchResults: %v\n", err)
-			return nil, err
-		} */
+			var r map[string]interface{}
+			err := json.Unmarshal(body, &r)
+			if err != nil {
+				//fmt.Printf("Error unmarshalling searchResults: %v\n", err)
+				return nil, err
+			} */
 		sr := new(searchResults)
 		err = json.Unmarshal(body, sr)
 		if err != nil {
@@ -538,11 +539,18 @@ func (client *IndexClient) SearchWithQuery(query Query) (SearchResults, error) {
 			return nil, err
 		}
 		//fmt.Printf("SearchResults object: %v\n", sr)
+		if sr.DidYouMean == nil {
+			empty := ""
+			sr.DidYouMean = &empty
+		}
 		return sr, nil
 	}
 	// todo handle other HTTP statuses
 	if resp.StatusCode == 404 {
 		return nil, errors.New("Index does not exist")
+	} else {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return nil, fmt.Errorf("Unexpected %d error: %s", resp.StatusCode, body)
 	}
 	return nil, fmt.Errorf("Unexpected %d error: %s", resp.StatusCode, resp.Status)
 }
@@ -553,7 +561,7 @@ func (client *IndexClient) Search(queryString string) (map[string]interface{}, e
 	// fetch_variables=None, fetch_categories=None):
 	searchUrl := client.url + "/search"
 	//fmt.Printf(" search URL: %s\n", searchUrl)
-	params := map[string]string { "q": queryString }
+	params := map[string]string{"q": queryString}
 	return doRequest("GET", searchUrl, params)
 }
 
@@ -563,4 +571,3 @@ func parseTime(s string) (time.Time, error) {
 	t, err := time.Parse(iSO8601Format, s)
 	return t, err
 }
-

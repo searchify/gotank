@@ -1,11 +1,11 @@
 package indextank
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
-	"fmt"
-	"encoding/json"
 )
 
 // Provides an interface to build a search query, which can then be executed by
@@ -27,35 +27,32 @@ type Query interface {
 }
 
 type varRange struct {
-	id int
+	id    int
 	floor float64
-	ceil float64
+	ceil  float64
 }
 
 type queryState struct {
-	queryString string
-	start int
-	length int
+	queryString     string
+	start           int
+	length          int
 	scoringFunction int
-	fetchFields []string
-	snippetFields []string
-	queryVariables map[int]float64
+	fetchFields     []string
+	snippetFields   []string
+	queryVariables  map[int]float64
 	fetchCategories bool
-	fetchVariables bool
-	// filter_docvarX
+	fetchVariables  bool
 	docvarFilters []varRange
-	// filter_functionX
 	functionFilters []varRange
-	// category_filters
 	categoryFilters map[string][]string
 }
 
 // Returns a Query for a given string.
 func QueryForString(s string) Query {
-	query := queryState {
-		queryString: s,
-		length: 10,
-		queryVariables: map[int]float64{},
+	query := queryState{
+		queryString:     s,
+		length:          10,
+		queryVariables:  map[int]float64{},
 		categoryFilters: map[string][]string{},
 	}
 	return &query
@@ -85,7 +82,7 @@ func (q *queryState) FetchCategories() {
 	q.fetchCategories = true
 }
 
-func (q *queryState) ScoringFunction(function int) (Query) {
+func (q *queryState) ScoringFunction(function int) Query {
 	q.scoringFunction = function
 	return q
 }
@@ -111,7 +108,7 @@ func (q *queryState) CategoryFilter(filters map[string][]string) {
 	// if len(filters) > 0 {
 	//   q.categoryFilters.putAll(filters)
 	// }
-	for k,v := range filters {
+	for k, v := range filters {
 		q.categoryFilters[k] = v
 	}
 }
@@ -143,11 +140,11 @@ func (q *queryState) ToQueryParams() string {
 		s += "&fetch=" + url.QueryEscape(strings.Join(q.fetchFields, ","))
 	}
 	if len(q.queryVariables) > 0 {
-		for k,v := range q.queryVariables {
-			params["var"+strconv.Itoa(k)] = fmt.Sprintf("%f",v)
+		for k, v := range q.queryVariables {
+			params["var"+strconv.Itoa(k)] = fmt.Sprintf("%f", v)
 			// todo - format these the best way we can
-		    //s += "&var" + strconv.Itoa(k) + "=" + fmt.Sprintf("%f",v)
-		    s += "&var" + strconv.Itoa(k) + "=" + strconv.FormatFloat(v, 'g', -1, 64)
+			//s += "&var" + strconv.Itoa(k) + "=" + fmt.Sprintf("%f",v)
+			s += "&var" + strconv.Itoa(k) + "=" + strconv.FormatFloat(v, 'g', -1, 64)
 		}
 	}
 	if q.fetchVariables {
@@ -175,20 +172,20 @@ func (q *queryState) ToQueryParams() string {
 			params["filter_docvar"+k] = v
 		}
 		/*
-		for _, v := range q.docvarFilters {
-			k := "filter_docvar" + strconv.Itoa(v.id)
-			newValue := strconv.FormatFloat(v.floor, 'g', -1, 64) + ":" + strconv.FormatFloat(v.ceil, 'g', -1, 64)
-			// was fmt.Sprintf("%f:%f", v.floor, v.ceil)
-			totalValue := newValue
-			if totalValue, ok := params[k]; ok {
-				totalValue += "," + newValue
-			}
+			for _, v := range q.docvarFilters {
+				k := "filter_docvar" + strconv.Itoa(v.id)
+				newValue := strconv.FormatFloat(v.floor, 'g', -1, 64) + ":" + strconv.FormatFloat(v.ceil, 'g', -1, 64)
+				// was fmt.Sprintf("%f:%f", v.floor, v.ceil)
+				totalValue := newValue
+				if totalValue, ok := params[k]; ok {
+					totalValue += "," + newValue
+				}
 
-			fmt.Printf("docvar %d: [%v,%v]\n", v.id, v.floor, v.ceil)
-			//s += "&filter_docvar" + strconv.Itoa(k) + "=" + fmt.Sprintf("%f:%f", v.floor, v.ceil)
-			//params["filter_docvar"+strconv.Itoa(k)] = fmt.Sprintf("%f:%f", v.floor, v.ceil)
-			params[k] = totalValue
-		} */
+				fmt.Printf("docvar %d: [%v,%v]\n", v.id, v.floor, v.ceil)
+				//s += "&filter_docvar" + strconv.Itoa(k) + "=" + fmt.Sprintf("%f:%f", v.floor, v.ceil)
+				//params["filter_docvar"+strconv.Itoa(k)] = fmt.Sprintf("%f:%f", v.floor, v.ceil)
+				params[k] = totalValue
+			} */
 	}
 
 	if len(q.functionFilters) > 0 {

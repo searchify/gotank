@@ -2,10 +2,10 @@ package indextank
 
 type deleteResults struct {
 	hasErrors bool
-	results []bool
-	errors map[int]string
-	elements []string
-	failed []string
+	results   []bool
+	errors    map[int]string
+	elements  []string
+	failed    []string
 }
 
 // Returns the results of a call to DeleteDocuments batch call
@@ -19,10 +19,10 @@ type BulkDeleteResults interface {
 
 type addResults struct {
 	hasErrors bool
-	results []bool
-	errors map[int]string
-	elements []Document
-	failed []Document
+	results   []bool
+	errors    map[int]string
+	elements  []Document
+	failed    []Document
 }
 
 // Returns the results of a call to AddDocuments batch call
@@ -35,7 +35,7 @@ type BatchResults interface {
 }
 
 // Bulk delete results
-func newBulkResults(documentIds []string, r []deleteResult) (BulkDeleteResults) {
+func newBulkResults(documentIds []string, r []deleteResult) BulkDeleteResults {
 	if len(documentIds) != len(r) {
 		panic("Something is wrong, len(documentIds) != len(r) in newBulkResults")
 	}
@@ -46,7 +46,7 @@ func newBulkResults(documentIds []string, r []deleteResult) (BulkDeleteResults) 
 	errors := map[int]string{}
 	failed := make([]string, 0)
 
-	for i,v := range r {
+	for i, v := range r {
 		results[i] = v.Deleted
 		if !v.Deleted {
 			errorFlag = true
@@ -57,10 +57,10 @@ func newBulkResults(documentIds []string, r []deleteResult) (BulkDeleteResults) 
 
 	return &deleteResults{
 		hasErrors: errorFlag,
-	    results: results,
-		errors: errors,
-		elements: documentIds,
-		failed: failed,
+		results:   results,
+		errors:    errors,
+		elements:  documentIds,
+		failed:    failed,
 	}
 }
 
@@ -85,8 +85,7 @@ func (r *deleteResults) GetFailedDocids() []string {
 	return r.failed
 }
 
-// Batch add results
-func newBatchResults(documents []Document, r []addResult) (BatchResults) {
+func newBatchResults(documents []Document, r []addResult) BatchResults {
 	if len(documents) != len(r) {
 		panic("Something is wrong, len(documents) != len(r) in newBatchResults")
 	}
@@ -97,7 +96,7 @@ func newBatchResults(documents []Document, r []addResult) (BatchResults) {
 	errors := map[int]string{}
 	failed := make([]Document, 0)
 
-	for i,v := range r {
+	for i, v := range r {
 		doc := documents[i]
 		results[i] = v.Added
 		if !v.Added {
@@ -109,10 +108,10 @@ func newBatchResults(documents []Document, r []addResult) (BatchResults) {
 
 	return &addResults{
 		hasErrors: errorFlag,
-		results: results,
-		errors: errors,
-		elements: documents,
-		failed: failed,
+		results:   results,
+		errors:    errors,
+		elements:  documents,
+		failed:    failed,
 	}
 }
 

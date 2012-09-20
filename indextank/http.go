@@ -1,16 +1,16 @@
 package indextank
 
 import (
-	"fmt"
-	"strings"
-	"encoding/json"
 	"bytes"
-	"net/http"
-	"net/url"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 )
 
 const version = "0.3"
@@ -58,14 +58,6 @@ func doRequest(method, requestUrl string, params map[string]string) (map[string]
 	// caller must construct url
 	uri := requestUrl
 
-	/*
-	if (params != nil && len(params) > 0) {
-		qparam := params["q"]
-		if (qparam != "") {
-			//fmt.Printf("Param: %s\n", params["q"])
-			uri += "?q=" + url.QueryEscape(qparam)
-		}
-	}*/
 	queryString := toQueryString(params)
 	uri += "?" + queryString
 	//fmt.Printf("---------> %s\n", queryString)
@@ -105,10 +97,9 @@ func toQueryString(params map[string]string) string {
 	for k, v := range params {
 		s += k + "=" + url.QueryEscape(v) + "&"
 	}
-	s = s[0:len(s) - 1]
+	s = s[0 : len(s)-1]
 	return s
 }
-
 
 func readResponseBody(resp *http.Response) (string, error) {
 	body, err := ioutil.ReadAll(resp.Body)
@@ -121,4 +112,3 @@ func readResponseBody(resp *http.Response) (string, error) {
 func isOk(status int) bool {
 	return status/100 == 2
 }
-

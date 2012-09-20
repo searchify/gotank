@@ -6,7 +6,7 @@
 
 ## Docs
 
-<http://go.pkgdoc.org/github.com/searchify/gotank>
+<http://go.pkgdoc.org/github.com/searchify/gotank/indextank>
 
 ## Use
 
